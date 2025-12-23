@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background-base: #000000;
+  --accent-purple: #8b5cf6;
+  --accent-mint: #10b981;
+}
+
+body {
+  color: #e2e8f0;
+  /* NEW: Richer, deeper gradient that feels expensive */
+  background: radial-gradient(circle at 50% 0%, #2e1065 0%, #000000 80%);
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Glass Panel: darker, sleeker, with a purple tint border */
+.glass-panel {
+  background: rgba(10, 10, 10, 0.4); /* Darker glass */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(139, 92, 246, 0.15); /* Subtle purple border */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* FIXED ROW: No movement (translateX removed), just a Glow */
+.glass-row {
+  transition: all 0.2s ease-in-out;
+  border-left: 2px solid transparent; /* Prepare for hover border */
+}
+
+.glass-row:hover {
+  background: rgba(139, 92, 246, 0.08); /* Purple tint on hover */
+  border-left: 2px solid #10b981; /* Neon Mint indicator on left */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Custom Scrollbar to match the dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #020617; 
+}
+::-webkit-scrollbar-thumb {
+  background: #4c1d95; /* Dark Purple */
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8b5cf6; /* Light Purple */
+}
