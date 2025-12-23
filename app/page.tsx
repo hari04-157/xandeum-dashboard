@@ -57,14 +57,14 @@ export default function Home() {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // --- FIX 1: DEFINE SEARCH HANDLER HERE (Top Level) ---
+  // --- 1. SEARCH HANDLER ---
   const handleSearchBlur = () => {
     if (searchTerm === "") {
         setIsSearchOpen(false);
     }
   };
 
-  // --- AUDIO ENGINE ---
+  // --- 2. AUDIO ENGINE ---
   const playSound = (type: 'click' | 'success' | 'terminal') => {
     if (!soundEnabled) return;
     try {
@@ -104,7 +104,7 @@ export default function Home() {
     } catch (e) { console.error("Audio block", e); }
   };
 
-  // --- HANDLERS ---
+  // --- 3. COPY HANDLER ---
   const handleCopyIp = (ip: string, e: React.MouseEvent) => {
     e.stopPropagation(); 
     navigator.clipboard.writeText(ip);
@@ -113,6 +113,7 @@ export default function Home() {
     setTimeout(() => setCopiedIp(null), 2000);
   };
 
+  // --- 4. DATA FETCHING ---
   const fetchNodes = async () => {
     setLoading(true);
     try {
@@ -125,7 +126,7 @@ export default function Home() {
     finally { setLoading(false); }
   };
 
-  // --- GOSSIP SIMULATION ---
+  // --- 5. GOSSIP SIMULATION ---
   useEffect(() => {
     const interval = setInterval(() => {
         const types: GossipLog['type'][] = ['block', 'vote', 'sync', 'ping'];
@@ -141,7 +142,6 @@ export default function Home() {
 
         const newEntry: GossipLog = { id: Date.now(), type, message, time: new Date().toLocaleTimeString() };
         
-        // Keep logs manageable
         setGossipLog(prev => [newEntry, ...prev].slice(0, isGossipExpanded ? 50 : 7)); 
         if(Math.random() > 0.7) playSound('terminal');
     }, 1200);
@@ -157,7 +157,7 @@ export default function Home() {
 
   useEffect(() => { if (isSearchOpen && searchInputRef.current) searchInputRef.current.focus(); }, [isSearchOpen]);
 
-  // --- FILTERING & SORTING ---
+  // --- 6. FILTERING & SORTING ---
   const processedNodes = useMemo(() => {
     let filtered = nodes.filter(node => {
         const matchesSearch = 
@@ -208,11 +208,11 @@ export default function Home() {
       const stats = await res.json();
       setNodeStats(stats);
     } catch (e) { 
-      // Fallback for simulation
       setTimeout(() => { setNodeStats({ file_size: Math.floor(Math.random() * 2e9), metadata: { total_bytes: 4e9 }, specs: node.specs || { cpu: "8 vCPU", ram: "32 GB" } }); }, 500); 
     }
   };
 
+  // --- 7. EXPORT HANDLER ---
   const handleExport = () => {
     playSound('success');
     const headers = "Address,Name,Provider,Country,City,Version,Status,LastSeen\n";
@@ -233,7 +233,7 @@ export default function Home() {
   const nodeGrowthData = [ { name: 'W1', nodes: 12 }, { name: 'W2', nodes: 25 }, { name: 'W3', nodes: 40 }, { name: 'W4', nodes: 58 } ];
 
   return (
-    <div className="min-h-screen p-6 md:p-10 pb-12 text-slate-200 font-sans flex flex-col relative overflow-hidden bg-[#020410]" onClick={() => { setIsNotifOpen(false); setIsSettingsOpen(false); }}>
+    <div className="min-h-screen p-4 md:p-10 pb-12 text-slate-200 font-sans flex flex-col relative overflow-hidden bg-[#020410]" onClick={() => { setIsNotifOpen(false); setIsSettingsOpen(false); }}>
       
       {/* Background Mesh */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -249,7 +249,7 @@ export default function Home() {
                 <div className="bg-gradient-to-br from-purple-600 to-blue-600 p-2.5 rounded-xl shadow-[0_0_30px_rgba(139,92,246,0.6)]">
                     <Database size={28} className="text-white" />
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white drop-shadow-lg">
+                <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-white drop-shadow-lg">
                   XANDEUM <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-purple-400">EXPLORER</span>
                 </h1>
             </div>
@@ -265,7 +265,6 @@ export default function Home() {
 
         {/* TOOLBAR */}
         <div className="flex items-center gap-2 w-full md:w-auto justify-end relative">
-            {/* Search */}
             <div className={`relative flex items-center bg-black/40 border border-slate-800 rounded-xl transition-all duration-500 ease-out overflow-hidden ${isSearchOpen ? 'w-full md:w-64 px-4 py-2.5 border-purple-500/50 shadow-[0_0_15px_rgba(139,92,246,0.2)]' : 'w-10 h-10 justify-center cursor-pointer hover:bg-white/5'}`} onClick={(e) => { e.stopPropagation(); !isSearchOpen && setIsSearchOpen(true); playSound('click'); }}>
                 <Search className={`text-slate-400 transition-colors ${isSearchOpen ? 'text-purple-400 mr-3' : 'group-hover:text-white'}`} size={18} />
                 {isSearchOpen && (
@@ -320,10 +319,10 @@ export default function Home() {
 
       {isFilterOpen && (
         <div className="max-w-7xl mx-auto w-full mb-6 animate-fade-in-down relative z-[40]">
-            <div className="glass-panel p-3 rounded-xl flex items-center gap-4">
-                <span className="text-xs font-bold text-slate-500 uppercase px-2">Filter By:</span>
+            <div className="glass-panel p-3 rounded-xl flex items-center gap-4 overflow-x-auto">
+                <span className="text-xs font-bold text-slate-500 uppercase px-2 shrink-0">Filter By:</span>
                 {['All', 'Online', 'Offline'].map(status => (
-                    <button key={status} onClick={() => { setStatusFilter(status); playSound('click'); }} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${statusFilter === status ? 'bg-purple-600 text-white shadow-lg' : 'bg-white/5 text-slate-400 hover:text-white'}`}>{status}</button>
+                    <button key={status} onClick={() => { setStatusFilter(status); playSound('click'); }} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${statusFilter === status ? 'bg-purple-600 text-white shadow-lg' : 'bg-white/5 text-slate-400 hover:text-white'}`}>{status}</button>
                 ))}
             </div>
         </div>
@@ -341,7 +340,7 @@ export default function Home() {
                         <h2 className="text-5xl font-black text-white">{activeCount}</h2>
                     </div>
                     
-                    {/* --- FIX 2: GOSSIP CARD (Kept Simple) --- */}
+                    {/* GOSSIP CARD */}
                     <div className="glass-panel p-4 rounded-2xl md:col-span-2 relative h-full flex flex-col bg-[#0b1121] border border-slate-800 shadow-inner">
                         <div className="flex items-center justify-between mb-3 border-b border-slate-800/50 pb-2">
                             <div className="flex items-center gap-2 text-emerald-400">
@@ -356,11 +355,11 @@ export default function Home() {
                             {gossipLog.slice(0, 7).map((log) => (
                                 <div key={log.id} className="animate-fade-in-left flex items-start gap-3 border-l-2 border-white/5 pl-2 hover:bg-white/5 hover:border-purple-500 transition-colors py-0.5 rounded-r">
                                     <span className="text-slate-500 shrink-0">{log.time}</span>
-                                    <div className="flex-1">
-                                        {log.type === 'block' && <span className="text-emerald-400 font-bold mr-3">[BLOCK]</span>}
-                                        {log.type === 'vote' && <span className="text-purple-400 font-bold mr-3">[VOTE]</span>}
-                                        {log.type === 'sync' && <span className="text-blue-400 font-bold mr-3">[SYNC]</span>}
-                                        {log.type === 'ping' && <span className="text-orange-400 font-bold mr-3">[PING]</span>}
+                                    <div className="flex-1 truncate">
+                                        {log.type === 'block' && <span className="text-emerald-400 font-bold mr-2">[BLOCK]</span>}
+                                        {log.type === 'vote' && <span className="text-purple-400 font-bold mr-2">[VOTE]</span>}
+                                        {log.type === 'sync' && <span className="text-blue-400 font-bold mr-2">[SYNC]</span>}
+                                        {log.type === 'ping' && <span className="text-orange-400 font-bold mr-2">[PING]</span>}
                                         <span className="text-slate-300">{log.message}</span>
                                     </div>
                                 </div>
@@ -378,46 +377,54 @@ export default function Home() {
                     </div>
                 </div>
 
+                {/* Main List (FIXED MOBILE SCROLLING) */}
                 <div className="glass-panel rounded-2xl overflow-hidden shadow-2xl">
-                    <div className="grid grid-cols-12 gap-4 p-5 bg-white/5 border-b border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                        <div className="col-span-1 flex items-center gap-1 cursor-pointer hover:text-white" onClick={() => requestSort('status')}>State <ArrowUpDown size={10}/></div>
-                        <div className="col-span-3 flex items-center gap-1 cursor-pointer hover:text-white" onClick={() => requestSort('name')}>Provider Name <ArrowUpDown size={10}/></div>
-                        <div className="col-span-2 flex items-center gap-1 cursor-pointer hover:text-white" onClick={() => requestSort('country')}>Location <ArrowUpDown size={10}/></div>
-                        <div className="col-span-2">IP Address</div>
-                        <div className="col-span-2">Ping (ms)</div>
-                        <div className="col-span-1">Ver</div>
-                        <div className="col-span-1 text-right">Action</div>
-                    </div>
-                    
-                    <div className="divide-y divide-white/5 min-h-[400px]">
-                        {loading ? (
-                            Array.from({ length: 5 }).map((_, i) => (
-                                <div key={i} className="grid grid-cols-12 gap-4 p-5 items-center">
-                                    <div className="col-span-1 h-3 w-3 rounded-full bg-white/10 animate-pulse"></div>
-                                    <div className="col-span-3 h-4 w-32 bg-white/10 rounded animate-pulse"></div>
-                                    <div className="col-span-8 h-4 bg-white/10 rounded animate-pulse"></div>
-                                </div>
-                            ))
-                        ) : currentNodes.length === 0 ? (
-                            <div className="p-12 text-center text-slate-500 flex flex-col items-center"><Search size={48} className="mb-4 opacity-20"/><p>No nodes found matching filters.</p></div>
-                        ) : (
-                            currentNodes.map((node, idx) => (
-                            <div key={idx} onClick={() => handleNodeClick(node)} className="grid grid-cols-12 gap-4 p-5 items-center glass-row cursor-pointer group hover:bg-white/5 transition-colors">
-                                <div className="col-span-1"><div className={`w-2.5 h-2.5 rounded-full ${node.status === 'Online' ? 'bg-emerald-400 shadow-[0_0_10px_#34d399] animate-pulse-slow' : 'bg-red-500 opacity-50'}`}></div></div>
-                                <div className="col-span-3"><div className="text-sm font-bold text-slate-200 group-hover:text-purple-300">{node.name}</div><div className="text-[10px] text-slate-400 uppercase font-bold">{node.provider}</div></div>
-                                <div className="col-span-2 flex items-center gap-2 text-sm text-slate-300"><span className="text-lg grayscale group-hover:grayscale-0">{node.location?.flag}</span><span className="truncate">{node.location?.city}</span></div>
-                                <div className="col-span-2 font-mono text-xs text-slate-400 group-hover:text-slate-200 flex items-center gap-2">
-                                    {node.address}
-                                    <button onClick={(e) => handleCopyIp(node.address, e)} className="text-slate-600 hover:text-emerald-400 transition">{copiedIp === node.address ? <Check size={12}/> : <Copy size={12}/>}</button>
-                                </div>
-                                <div className="col-span-2 font-mono text-xs text-slate-300"><span className={`px-2 py-0.5 rounded ${Math.random() > 0.5 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-yellow-500/10 text-yellow-400'}`}>{Math.floor(Math.random() * 80) + 12}ms</span></div>
-                                <div className="col-span-1"><span className="px-2 py-1 rounded text-[10px] font-mono border bg-white/5 border-white/10 text-slate-300">{node.version}</span></div>
-                                <div className="col-span-1 text-right flex justify-end"><span className="p-2 rounded-lg bg-white/5 text-slate-400 group-hover:text-white group-hover:bg-purple-500"><ChevronRight size={14}/></span></div>
+                    <div className="overflow-x-auto">
+                        <div className="min-w-[900px]">
+                            {/* Header */}
+                            <div className="grid grid-cols-12 gap-4 p-5 bg-white/5 border-b border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                <div className="col-span-1 flex items-center gap-1 cursor-pointer hover:text-white" onClick={() => requestSort('status')}>State <ArrowUpDown size={10}/></div>
+                                <div className="col-span-3 flex items-center gap-1 cursor-pointer hover:text-white" onClick={() => requestSort('name')}>Provider Name <ArrowUpDown size={10}/></div>
+                                <div className="col-span-2 flex items-center gap-1 cursor-pointer hover:text-white" onClick={() => requestSort('country')}>Location <ArrowUpDown size={10}/></div>
+                                <div className="col-span-2">IP Address</div>
+                                <div className="col-span-2">Ping (ms)</div>
+                                <div className="col-span-1">Ver</div>
+                                <div className="col-span-1 text-right">Action</div>
                             </div>
-                            ))
-                        )}
+                            
+                            {/* Table Body */}
+                            <div className="divide-y divide-white/5 min-h-[400px]">
+                                {loading ? (
+                                    Array.from({ length: 5 }).map((_, i) => (
+                                        <div key={i} className="grid grid-cols-12 gap-4 p-5 items-center">
+                                            <div className="col-span-1 h-3 w-3 rounded-full bg-white/10 animate-pulse"></div>
+                                            <div className="col-span-3 h-4 w-32 bg-white/10 rounded animate-pulse"></div>
+                                            <div className="col-span-8 h-4 bg-white/10 rounded animate-pulse"></div>
+                                        </div>
+                                    ))
+                                ) : currentNodes.length === 0 ? (
+                                    <div className="p-12 text-center text-slate-500 flex flex-col items-center"><Search size={48} className="mb-4 opacity-20"/><p>No nodes found matching filters.</p></div>
+                                ) : (
+                                    currentNodes.map((node, idx) => (
+                                    <div key={idx} onClick={() => handleNodeClick(node)} className="grid grid-cols-12 gap-4 p-5 items-center glass-row cursor-pointer group hover:bg-white/5 transition-colors">
+                                        <div className="col-span-1"><div className={`w-2.5 h-2.5 rounded-full ${node.status === 'Online' ? 'bg-emerald-400 shadow-[0_0_10px_#34d399] animate-pulse-slow' : 'bg-red-500 opacity-50'}`}></div></div>
+                                        <div className="col-span-3"><div className="text-sm font-bold text-slate-200 group-hover:text-purple-300">{node.name}</div><div className="text-[10px] text-slate-400 uppercase font-bold">{node.provider}</div></div>
+                                        <div className="col-span-2 flex items-center gap-2 text-sm text-slate-300"><span className="text-lg grayscale group-hover:grayscale-0">{node.location?.flag}</span><span className="truncate">{node.location?.city}</span></div>
+                                        <div className="col-span-2 font-mono text-xs text-slate-400 group-hover:text-slate-200 flex items-center gap-2">
+                                            {node.address}
+                                            <button onClick={(e) => handleCopyIp(node.address, e)} className="text-slate-600 hover:text-emerald-400 transition">{copiedIp === node.address ? <Check size={12}/> : <Copy size={12}/>}</button>
+                                        </div>
+                                        <div className="col-span-2 font-mono text-xs text-slate-300"><span className={`px-2 py-0.5 rounded ${Math.random() > 0.5 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-yellow-500/10 text-yellow-400'}`}>{Math.floor(Math.random() * 80) + 12}ms</span></div>
+                                        <div className="col-span-1"><span className="px-2 py-1 rounded text-[10px] font-mono border bg-white/5 border-white/10 text-slate-300">{node.version}</span></div>
+                                        <div className="col-span-1 text-right flex justify-end"><span className="p-2 rounded-lg bg-white/5 text-slate-400 group-hover:text-white group-hover:bg-purple-500"><ChevronRight size={14}/></span></div>
+                                    </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
                     </div>
 
+                    {/* Pagination */}
                     <div className="p-4 border-t border-white/5 flex justify-between items-center bg-black/20">
                         <div className="text-xs text-slate-500">Showing {indexOfFirstNode + 1}-{Math.min(indexOfLastNode, processedNodes.length)} of {processedNodes.length} nodes</div>
                         <div className="flex gap-2">
@@ -429,6 +436,7 @@ export default function Home() {
             </div>
         )}
 
+        {/* ... Analytics Tab ... */}
         {activeTab === 'analytics' && (
             <div className="space-y-6 animate-fade-in-down">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -445,6 +453,7 @@ export default function Home() {
         )}
       </div>
 
+      {/* --- INFO SECTION --- */}
       <div className="max-w-7xl mx-auto w-full mt-16 mb-8 relative z-[10] animate-fade-in-down">
           <div className="flex items-center gap-3 mb-8"><div className="bg-purple-600/20 p-2 rounded-lg border border-purple-500/30"><BookOpen size={24} className="text-purple-400"/></div><h2 className="text-3xl font-bold text-white">About the Network</h2></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -464,8 +473,6 @@ export default function Home() {
 
       {selectedNode && <NodeModal node={selectedNode} stats={nodeStats} close={() => setSelectedNode(null)} />}
       {isFaqOpen && <FaqModal close={() => setIsFaqOpen(false)} />}
-      
-      {/* --- FIX 3: INDEPENDENT MAXIMIZED GOSSIP OVERLAY --- */}
       {isGossipExpanded && (
         <div className="fixed inset-0 z-[2000] bg-[#0b1121] flex flex-col p-6 animate-scale-up overflow-hidden">
             <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4">
