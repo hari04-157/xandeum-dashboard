@@ -57,14 +57,14 @@ export default function Home() {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // --- 1. SEARCH HANDLER ---
+  // --- HANDLERS ---
   const handleSearchBlur = () => {
     if (searchTerm === "") {
         setIsSearchOpen(false);
     }
   };
 
-  // --- 2. AUDIO ENGINE ---
+  // --- AUDIO ENGINE ---
   const playSound = (type: 'click' | 'success' | 'terminal') => {
     if (!soundEnabled) return;
     try {
@@ -78,33 +78,16 @@ export default function Home() {
         const now = ctx.currentTime;
         
         if (type === 'click') {
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, now);
-            osc.frequency.exponentialRampToValueAtTime(300, now + 0.08);
-            gain.gain.setValueAtTime(0.15, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-            osc.start(now);
-            osc.stop(now + 0.1);
+            osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.08); gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08); osc.start(now); osc.stop(now + 0.1);
         } else if (type === 'terminal') {
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(200, now);
-            gain.gain.setValueAtTime(0.05, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
-            osc.start(now);
-            osc.stop(now + 0.05);
+            osc.type = 'square'; osc.frequency.setValueAtTime(200, now); gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05); osc.start(now); osc.stop(now + 0.05);
         } else if (type === 'success') {
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(600, now);
-            osc.frequency.linearRampToValueAtTime(800, now + 0.1);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
-            osc.start(now);
-            osc.stop(now + 0.3);
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(600, now); osc.frequency.linearRampToValueAtTime(800, now + 0.1); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.3); osc.start(now); osc.stop(now + 0.3);
         }
     } catch (e) { console.error("Audio block", e); }
   };
 
-  // --- 3. COPY HANDLER ---
+  // --- COPY HANDLER ---
   const handleCopyIp = (ip: string, e: React.MouseEvent) => {
     e.stopPropagation(); 
     navigator.clipboard.writeText(ip);
@@ -113,7 +96,7 @@ export default function Home() {
     setTimeout(() => setCopiedIp(null), 2000);
   };
 
-  // --- 4. DATA FETCHING ---
+  // --- DATA FETCHING ---
   const fetchNodes = async () => {
     setLoading(true);
     try {
@@ -126,7 +109,7 @@ export default function Home() {
     finally { setLoading(false); }
   };
 
-  // --- 5. GOSSIP SIMULATION ---
+  // --- GOSSIP SIMULATION ---
   useEffect(() => {
     const interval = setInterval(() => {
         const types: GossipLog['type'][] = ['block', 'vote', 'sync', 'ping'];
@@ -157,7 +140,7 @@ export default function Home() {
 
   useEffect(() => { if (isSearchOpen && searchInputRef.current) searchInputRef.current.focus(); }, [isSearchOpen]);
 
-  // --- 6. FILTERING & SORTING ---
+  // --- FILTERING & SORTING ---
   const processedNodes = useMemo(() => {
     let filtered = nodes.filter(node => {
         const matchesSearch = 
@@ -212,7 +195,6 @@ export default function Home() {
     }
   };
 
-  // --- 7. EXPORT HANDLER ---
   const handleExport = () => {
     playSound('success');
     const headers = "Address,Name,Provider,Country,City,Version,Status,LastSeen\n";
@@ -265,6 +247,7 @@ export default function Home() {
 
         {/* TOOLBAR */}
         <div className="flex items-center gap-2 w-full md:w-auto justify-end relative">
+            {/* Search */}
             <div className={`relative flex items-center bg-black/40 border border-slate-800 rounded-xl transition-all duration-500 ease-out overflow-hidden ${isSearchOpen ? 'w-full md:w-64 px-4 py-2.5 border-purple-500/50 shadow-[0_0_15px_rgba(139,92,246,0.2)]' : 'w-10 h-10 justify-center cursor-pointer hover:bg-white/5'}`} onClick={(e) => { e.stopPropagation(); !isSearchOpen && setIsSearchOpen(true); playSound('click'); }}>
                 <Search className={`text-slate-400 transition-colors ${isSearchOpen ? 'text-purple-400 mr-3' : 'group-hover:text-white'}`} size={18} />
                 {isSearchOpen && (
@@ -377,54 +360,90 @@ export default function Home() {
                     </div>
                 </div>
 
-                {/* Main List (FIXED MOBILE SCROLLING) */}
-                <div className="glass-panel rounded-2xl overflow-hidden shadow-2xl">
-                    <div className="overflow-x-auto">
-                        <div className="min-w-[900px]">
-                            {/* Header */}
-                            <div className="grid grid-cols-12 gap-4 p-5 bg-white/5 border-b border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                <div className="col-span-1 flex items-center gap-1 cursor-pointer hover:text-white" onClick={() => requestSort('status')}>State <ArrowUpDown size={10}/></div>
-                                <div className="col-span-3 flex items-center gap-1 cursor-pointer hover:text-white" onClick={() => requestSort('name')}>Provider Name <ArrowUpDown size={10}/></div>
-                                <div className="col-span-2 flex items-center gap-1 cursor-pointer hover:text-white" onClick={() => requestSort('country')}>Location <ArrowUpDown size={10}/></div>
-                                <div className="col-span-2">IP Address</div>
-                                <div className="col-span-2">Ping (ms)</div>
-                                <div className="col-span-1">Ver</div>
-                                <div className="col-span-1 text-right">Action</div>
+                {/* --- 1. MOBILE CARD VIEW (VISIBLE ONLY ON MOBILE) --- */}
+                <div className="md:hidden space-y-4">
+                    {loading ? <div className="text-center text-slate-500 py-10">Loading Nodes...</div> : currentNodes.map((node, idx) => (
+                        <div key={idx} onClick={() => handleNodeClick(node)} className="glass-panel p-4 rounded-xl active:scale-95 transition-transform border border-white/10 relative overflow-hidden">
+                            <div className="flex justify-between items-start mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-2.5 h-2.5 rounded-full ${node.status === 'Online' ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-red-500'}`}></div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-white leading-tight">{node.name}</h3>
+                                        <p className="text-[10px] text-slate-400 uppercase tracking-wide">{node.provider}</p>
+                                    </div>
+                                </div>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-mono border ${node.version === '1.0.2' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-orange-500/10 border-orange-500/20 text-orange-400'}`}>{node.version}</span>
                             </div>
                             
-                            {/* Table Body */}
-                            <div className="divide-y divide-white/5 min-h-[400px]">
-                                {loading ? (
-                                    Array.from({ length: 5 }).map((_, i) => (
-                                        <div key={i} className="grid grid-cols-12 gap-4 p-5 items-center">
-                                            <div className="col-span-1 h-3 w-3 rounded-full bg-white/10 animate-pulse"></div>
-                                            <div className="col-span-3 h-4 w-32 bg-white/10 rounded animate-pulse"></div>
-                                            <div className="col-span-8 h-4 bg-white/10 rounded animate-pulse"></div>
-                                        </div>
-                                    ))
-                                ) : currentNodes.length === 0 ? (
-                                    <div className="p-12 text-center text-slate-500 flex flex-col items-center"><Search size={48} className="mb-4 opacity-20"/><p>No nodes found matching filters.</p></div>
-                                ) : (
-                                    currentNodes.map((node, idx) => (
-                                    <div key={idx} onClick={() => handleNodeClick(node)} className="grid grid-cols-12 gap-4 p-5 items-center glass-row cursor-pointer group hover:bg-white/5 transition-colors">
-                                        <div className="col-span-1"><div className={`w-2.5 h-2.5 rounded-full ${node.status === 'Online' ? 'bg-emerald-400 shadow-[0_0_10px_#34d399] animate-pulse-slow' : 'bg-red-500 opacity-50'}`}></div></div>
-                                        <div className="col-span-3"><div className="text-sm font-bold text-slate-200 group-hover:text-purple-300">{node.name}</div><div className="text-[10px] text-slate-400 uppercase font-bold">{node.provider}</div></div>
-                                        <div className="col-span-2 flex items-center gap-2 text-sm text-slate-300"><span className="text-lg grayscale group-hover:grayscale-0">{node.location?.flag}</span><span className="truncate">{node.location?.city}</span></div>
-                                        <div className="col-span-2 font-mono text-xs text-slate-400 group-hover:text-slate-200 flex items-center gap-2">
-                                            {node.address}
-                                            <button onClick={(e) => handleCopyIp(node.address, e)} className="text-slate-600 hover:text-emerald-400 transition">{copiedIp === node.address ? <Check size={12}/> : <Copy size={12}/>}</button>
-                                        </div>
-                                        <div className="col-span-2 font-mono text-xs text-slate-300"><span className={`px-2 py-0.5 rounded ${Math.random() > 0.5 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-yellow-500/10 text-yellow-400'}`}>{Math.floor(Math.random() * 80) + 12}ms</span></div>
-                                        <div className="col-span-1"><span className="px-2 py-1 rounded text-[10px] font-mono border bg-white/5 border-white/10 text-slate-300">{node.version}</span></div>
-                                        <div className="col-span-1 text-right flex justify-end"><span className="p-2 rounded-lg bg-white/5 text-slate-400 group-hover:text-white group-hover:bg-purple-500"><ChevronRight size={14}/></span></div>
-                                    </div>
-                                    ))
-                                )}
+                            <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+                                <div className="bg-white/5 p-2 rounded flex items-center gap-2 text-slate-300">
+                                    <span className="text-lg">{node.location?.flag}</span> {node.location?.city}
+                                </div>
+                                <div className="bg-white/5 p-2 rounded flex items-center justify-between text-emerald-400 font-mono">
+                                    <span>PING</span>
+                                    <span>{Math.floor(Math.random() * 80) + 12}ms</span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                                <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
+                                    {node.address}
+                                    <button onClick={(e) => handleCopyIp(node.address, e)} className="text-slate-400 active:text-white p-1 rounded hover:bg-white/10"><Copy size={12}/></button>
+                                </div>
+                                <ChevronRight size={16} className="text-slate-600"/>
                             </div>
                         </div>
+                    ))}
+                    
+                    {/* Mobile Pagination */}
+                    <div className="flex justify-between items-center pt-4">
+                        <button disabled={currentPage === 1} onClick={() => {setCurrentPage(p => p - 1); playSound('click');}} className="p-3 rounded-lg bg-white/5 text-slate-400 disabled:opacity-30"><ChevronLeft size={20}/></button>
+                        <span className="text-xs text-slate-500">Page {currentPage} of {totalPages}</span>
+                        <button disabled={currentPage === totalPages} onClick={() => {setCurrentPage(p => p + 1); playSound('click');}} className="p-3 rounded-lg bg-white/5 text-slate-400 disabled:opacity-30"><ChevronRight size={20}/></button>
+                    </div>
+                </div>
+
+                {/* --- 2. DESKTOP TABLE VIEW (HIDDEN ON MOBILE) --- */}
+                <div className="hidden md:block glass-panel rounded-2xl overflow-hidden shadow-2xl">
+                    <div className="grid grid-cols-12 gap-4 p-5 bg-white/5 border-b border-white/5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <div className="col-span-1 flex items-center gap-1 cursor-pointer hover:text-white" onClick={() => requestSort('status')}>State <ArrowUpDown size={10}/></div>
+                        <div className="col-span-3 flex items-center gap-1 cursor-pointer hover:text-white" onClick={() => requestSort('name')}>Provider Name <ArrowUpDown size={10}/></div>
+                        <div className="col-span-2 flex items-center gap-1 cursor-pointer hover:text-white" onClick={() => requestSort('country')}>Location <ArrowUpDown size={10}/></div>
+                        <div className="col-span-2">IP Address</div>
+                        <div className="col-span-2">Ping (ms)</div>
+                        <div className="col-span-1">Ver</div>
+                        <div className="col-span-1 text-right">Action</div>
+                    </div>
+                    
+                    <div className="divide-y divide-white/5 min-h-[400px]">
+                        {loading ? (
+                            Array.from({ length: 5 }).map((_, i) => (
+                                <div key={i} className="grid grid-cols-12 gap-4 p-5 items-center">
+                                    <div className="col-span-1 h-3 w-3 rounded-full bg-white/10 animate-pulse"></div>
+                                    <div className="col-span-3 h-4 w-32 bg-white/10 rounded animate-pulse"></div>
+                                    <div className="col-span-8 h-4 bg-white/10 rounded animate-pulse"></div>
+                                </div>
+                            ))
+                        ) : currentNodes.length === 0 ? (
+                            <div className="p-12 text-center text-slate-500 flex flex-col items-center"><Search size={48} className="mb-4 opacity-20"/><p>No nodes found matching filters.</p></div>
+                        ) : (
+                            currentNodes.map((node, idx) => (
+                            <div key={idx} onClick={() => handleNodeClick(node)} className="grid grid-cols-12 gap-4 p-5 items-center glass-row cursor-pointer group hover:bg-white/5 transition-colors">
+                                <div className="col-span-1"><div className={`w-2.5 h-2.5 rounded-full ${node.status === 'Online' ? 'bg-emerald-400 shadow-[0_0_10px_#34d399] animate-pulse-slow' : 'bg-red-500 opacity-50'}`}></div></div>
+                                <div className="col-span-3"><div className="text-sm font-bold text-slate-200 group-hover:text-purple-300">{node.name}</div><div className="text-[10px] text-slate-400 uppercase font-bold">{node.provider}</div></div>
+                                <div className="col-span-2 flex items-center gap-2 text-sm text-slate-300"><span className="text-lg grayscale group-hover:grayscale-0">{node.location?.flag}</span><span className="truncate">{node.location?.city}</span></div>
+                                <div className="col-span-2 font-mono text-xs text-slate-400 group-hover:text-slate-200 flex items-center gap-2">
+                                    {node.address}
+                                    <button onClick={(e) => handleCopyIp(node.address, e)} className="text-slate-600 hover:text-emerald-400 transition">{copiedIp === node.address ? <Check size={12}/> : <Copy size={12}/>}</button>
+                                </div>
+                                <div className="col-span-2 font-mono text-xs text-slate-300"><span className={`px-2 py-0.5 rounded ${Math.random() > 0.5 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-yellow-500/10 text-yellow-400'}`}>{Math.floor(Math.random() * 80) + 12}ms</span></div>
+                                <div className="col-span-1"><span className="px-2 py-1 rounded text-[10px] font-mono border bg-white/5 border-white/10 text-slate-300">{node.version}</span></div>
+                                <div className="col-span-1 text-right flex justify-end"><span className="p-2 rounded-lg bg-white/5 text-slate-400 group-hover:text-white group-hover:bg-purple-500"><ChevronRight size={14}/></span></div>
+                            </div>
+                            ))
+                        )}
                     </div>
 
-                    {/* Pagination */}
                     <div className="p-4 border-t border-white/5 flex justify-between items-center bg-black/20">
                         <div className="text-xs text-slate-500">Showing {indexOfFirstNode + 1}-{Math.min(indexOfLastNode, processedNodes.length)} of {processedNodes.length} nodes</div>
                         <div className="flex gap-2">
